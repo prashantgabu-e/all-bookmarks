@@ -18,7 +18,7 @@ function App() {
     if (!clientId || clientId.includes('your-')) { setNotice('Configure VITE_GOOGLE_CLIENT_ID and VITE_APPS_SCRIPT_ID to begin.'); return; }
     const script = document.createElement('script'); script.src = 'https://accounts.google.com/gsi/client'; script.async = true;
     script.onload = () => {
-      tokenClient.current = window.google?.accounts.oauth2.initTokenClient({ client_id: clientId, scope: 'https://www.googleapis.com/auth/script.projects', callback: (r: { access_token?: string; error?: string }) => { if (r.error || !r.access_token) { setToken(''); setNotice(r.error || 'Google permission was not granted.'); return; } setAccessToken(r.access_token); setAccessTokenState(r.access_token); } }) || null;
+      tokenClient.current = window.google?.accounts.oauth2.initTokenClient({ client_id: clientId, scope: 'https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/script.external_request', callback: (r: { access_token?: string; error?: string }) => { if (r.error || !r.access_token) { setToken(''); setNotice(r.error || 'Google permission was not granted.'); return; } setAccessToken(r.access_token); setAccessTokenState(r.access_token); } }) || null;
       window.google?.accounts.id.initialize({ client_id: clientId, callback: (r: { credential: string }) => { setIdToken(r.credential); setToken(r.credential); tokenClient.current?.requestAccessToken({ prompt: 'consent' }); } }); setGoogleReady(true);
     }; document.head.appendChild(script);
     return () => script.remove();
