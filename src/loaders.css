@@ -10,3 +10,29 @@ fieldset:disabled {
 .spinner {
   animation: spin .8s linear infinite;
 }
+
+/* Compact bookmark cards */
+.grid {
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  gap: 13px;
+}
+
+.card {
+  min-height: 196px;
+  padding: 14px;
+}
+
+.card h2 { margin: 12px 0 5px; font-size: 16px; }
+.card p { margin-bottom: 9px; -webkit-line-clamp: 2; }
+.tags { margin-bottom: 10px; }
+
+/* Tag picker */
+.tag-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 0; }
+.tag-chips button { display: inline-flex; align-items: center; gap: 3px; border-radius: 99px; padding: 5px 8px; background: var(--surface-soft); color: var(--v); font-size: 12px; }
+.tag-controls { display: grid; grid-template-columns: 1fr 1fr auto; gap: 7px; }
+.tag-controls button { border-radius: 8px; padding: 0 11px; background: var(--surface-soft); color: var(--v); font-weight: 700; }
+
+@media (max-width: 720px) {
+  .tag-controls { grid-template-columns: 1fr; }
+  .card { min-height: 184px; }
+}
