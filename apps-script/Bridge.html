@@ -1,0 +1,12 @@
+<!doctype html><html><body><script>
+  const SOURCE='violet-bookmarks';
+  const announceReady = () => window.parent.postMessage({source:SOURCE,type:'ready'},'*');
+  announceReady();
+  window.addEventListener('message', event => {
+    const request=event.data;
+    if (!request || request.source!==SOURCE) return;
+    if (request.type==='handshake') { announceReady(); return; }
+    if (request.type!=='request') return;
+    google.script.run.withSuccessHandler(response => window.parent.postMessage({source:SOURCE,type:'response',requestId:request.requestId,response},'*')).withFailureHandler(error => window.parent.postMessage({source:SOURCE,type:'response',requestId:request.requestId,response:{ok:false,error:error.message}},'*')).api(request);
+  });
+</script></body></html>
