@@ -11,6 +11,41 @@ fieldset:disabled {
   animation: spin .8s linear infinite;
 }
 
+/* Keep one desktop action area: the sidebar; hide the duplicate header controls. */
+.header-actions { display: none; }
+
+.toast {
+  position: fixed;
+  z-index: 30;
+  right: 22px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 12px 13px 12px 16px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--v);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--heading);
+  box-shadow: 0 14px 34px #160d2930;
+  animation: toast-in .22s ease both;
+  font-size: 13px;
+}
+
+.toast button { padding: 3px; color: var(--muted); }
+
+/* Search, category, and tag filters retain usable width at every desktop size. */
+.filters {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.25fr) minmax(220px, 1fr) minmax(165px, .7fr);
+  align-items: stretch;
+}
+
+.filters label { min-width: 0; }
+.filters select { width: 100%; min-width: 0; }
+
 /* Compact bookmark cards */
 .grid {
   grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
@@ -29,10 +64,49 @@ fieldset:disabled {
 /* Tag picker */
 .tag-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 0; }
 .tag-chips button { display: inline-flex; align-items: center; gap: 3px; border-radius: 99px; padding: 5px 8px; background: var(--surface-soft); color: var(--v); font-size: 12px; }
-.tag-controls { display: grid; grid-template-columns: 1fr 1fr auto; gap: 7px; }
-.tag-controls button { border-radius: 8px; padding: 0 11px; background: var(--surface-soft); color: var(--v); font-weight: 700; }
+.tag-search { position: relative; }
+.tag-search input { width: 100%; }
+.tag-menu { position: absolute; z-index: 3; top: calc(100% + 5px); left: 0; right: 0; display: grid; max-height: 180px; overflow: auto; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); box-shadow: 0 12px 24px #20152b20; }
+.tag-menu button { padding: 9px 11px; text-align: left; color: var(--nav-text); }
+.tag-menu button:hover, .tag-menu .create-tag { background: var(--surface-soft); color: var(--v); }
+.category-choice > div { display: flex; flex-wrap: wrap; gap: 7px; }
+.category-choice button { border: 1px solid var(--line); border-radius: 999px; padding: 7px 10px; color: var(--nav-text); }
+.category-choice button.selected { border-color: var(--v); background: var(--surface-soft); color: var(--v); }
+
+/* URL actions sit cleanly inside the field without obscuring long URLs. */
+.inline-actions {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  right: 8px;
+  top: 25px;
+  padding-left: 5px;
+  background: var(--surface);
+}
+
+.inline-actions button,
+.url-row > button {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-soft);
+  color: var(--v);
+}
+
+.inline-actions + input { padding-right: 76px; }
+.url-row > button { flex: 0 0 25px; }
 
 @media (max-width: 720px) {
-  .tag-controls { grid-template-columns: 1fr; }
+  .filters { grid-template-columns: 1fr; }
   .card { min-height: 184px; }
+  .toast { right: 16px; bottom: 84px; }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
