@@ -1,0 +1,12 @@
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled,
+fieldset:disabled {
+  cursor: not-allowed;
+  opacity: .58;
+}
+
+.spinner {
+  animation: spin .8s linear infinite;
+}
