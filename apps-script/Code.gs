@@ -27,9 +27,9 @@ function api(request) {
 function props_() { const p = PropertiesService.getScriptProperties().getProperties(); ['SPREADSHEET_ID', 'DRIVE_FOLDER_ID', 'GOOGLE_CLIENT_ID', 'ALLOWED_EMAILS'].forEach(k => { if (!p[k]) throw new Error('Server configuration is incomplete: ' + k); }); return p; }
 function authorize_(token) {
   if (!token) throw new Error('Sign-in token required.'); const p = props_();
-  const res = UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(token), { muteHttpExceptions: true });
+  const res = UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(token), { muteHttpExceptions: true });
   if (res.getResponseCode() !== 200) throw new Error('Google sign-in token is invalid or expired.'); const claim = JSON.parse(res.getContentText());
-  if (claim.aud !== p.GOOGLE_CLIENT_ID || claim.email_verified !== 'true') throw new Error('Google sign-in could not be verified.');
+  if (claim.aud !== p.GOOGLE_CLIENT_ID || !claim.email) throw new Error('Google sign-in could not be verified.');
   const allow = p.ALLOWED_EMAILS.split(',').map(x => x.trim().toLowerCase()); if (!allow.includes(String(claim.email).toLowerCase())) throw new Error('This Google account is not authorized.'); return claim.email;
 }
 function ss_() { return SpreadsheetApp.openById(props_().SPREADSHEET_ID); }
