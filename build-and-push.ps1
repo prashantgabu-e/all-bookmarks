@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-$branch = "main"
+$branch = "master"
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $commitMessage = "build: update site output $timestamp"
 
