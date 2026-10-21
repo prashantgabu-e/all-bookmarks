@@ -6,4 +6,7 @@ export type Bookmark = {
 };
 export type Metadata = Pick<Bookmark, 'title' | 'description' | 'faviconUrl' | 'ogImageUrl' | 'metadata'> & { warning?: string };
 export type BridgeResponse<T> = { ok: boolean; data?: T; error?: string };
-declare global { interface Window { google?: { accounts: { id: { initialize(config: unknown): void; renderButton(element: HTMLElement, options: unknown): void; prompt(): void } } } } }
+declare global { interface Window { google?: { accounts: {
+  id: { initialize(config: unknown): void; renderButton(element: HTMLElement, options: unknown): void; prompt(): void };
+  oauth2: { initTokenClient(config: unknown): { requestAccessToken(config?: { prompt?: string }): void } };
+} } } }

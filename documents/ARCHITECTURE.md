@@ -9,8 +9,8 @@ flowchart LR
   U[Owner] --> SPA[GitHub Pages<br/>React + Vite]
   SPA --> GIS[Google Identity Services]
   GIS -->|ID token| SPA
-  SPA -->|postMessage RPC| Frame[Apps Script iframe bridge]
-  Frame -->|google.script.run| GAS[Apps Script]
+  SPA -->|OAuth access token| API[Apps Script Execution API]
+  API --> GAS[Apps Script API executable]
   GAS --> Sheets[(Google Sheets)]
   GAS --> Drive[(Google Drive)]
   GAS --> Web[Website metadata]
@@ -19,14 +19,13 @@ flowchart LR
 ## Frontend
 
 - `src/App.tsx` contains the library, Settings, authentication state, bookmark editor, and theme state.
-- `src/lib/bridge.ts` loads the Apps Script web app into a hidden iframe and transports typed request/response messages with request IDs and timeouts. This avoids browser CORS restrictions between GitHub Pages and Apps Script.
+- `src/lib/bridge.ts` calls the Google Apps Script Execution API using the signed-in owner’s OAuth access token. This is supported from GitHub Pages and avoids Apps Script iframe sandbox restrictions.
 - `src/lib/image.ts` resizes and compresses image uploads before transfer.
 - `src/styles.css` provides the responsive layout and both color themes. The active theme is set on `html[data-theme]`.
 
 ## Apps Script service
 
-- `apps-script/Bridge.html` receives parent-window RPC messages, invokes `google.script.run.api`, and posts results back to the frontend.
-- `apps-script/Code.gs` validates Google ID tokens with Google tokeninfo, checks the allowed-email list, and dispatches operations.
+- `apps-script/Code.gs` validates Google ID tokens with Google tokeninfo, checks the allowed-email list, and dispatches operations. Its public `api` function is invoked through the Apps Script Execution API.
 - Supported operations: `bootstrap`, `listBookmarks`, `getBookmark`, `saveBookmark`, `deleteBookmark`, `moveBookmark`, `listCategories`, `saveCategory`, `deleteCategory`, `fetchMetadata`, and `uploadPhoto`.
 
 ## Storage model
@@ -39,7 +38,7 @@ Photos are saved in the Drive folder named by the `DRIVE_FOLDER_ID` Script Prope
 
 ## Configuration and deployment
 
-The frontend requires `VITE_GOOGLE_CLIENT_ID` and `VITE_APPS_SCRIPT_URL` in `.env`. Apps Script requires these Script Properties:
+The frontend requires `VITE_GOOGLE_CLIENT_ID` and `VITE_APPS_SCRIPT_ID` in `.env`. `VITE_APPS_SCRIPT_ID` is the Script ID shown in Apps Script Project Settings, not a web-app deployment URL. Apps Script requires these Script Properties:
 
 - `SPREADSHEET_ID`
 - `DRIVE_FOLDER_ID`
@@ -47,4 +46,4 @@ The frontend requires `VITE_GOOGLE_CLIENT_ID` and `VITE_APPS_SCRIPT_URL` in `.en
 - `ALLOWED_EMAILS`
 - `APP_ORIGIN` (reserved for deployment policy)
 
-Deploy Apps Script as a web app running as the owner, then copy its `/exec` URL to the frontend environment file. Run `npm run build` to populate `docs/` for GitHub Pages.
+Associate the Apps Script project with the OAuth client’s Google Cloud project, enable the Google Apps Script API, and deploy it as an API Executable. Run `npm run build` to populate `docs/` for GitHub Pages.

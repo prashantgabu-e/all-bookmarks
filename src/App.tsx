@@ -1,26 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Bookmark as BookmarkIcon, Copy, ExternalLink, FolderPlus, Home, ImagePlus, Link, LoaderCircle, Moon, Pencil, Plus, RefreshCw, Search, Settings, Sun, Trash2, X } from 'lucide-react';
 import type { Bookmark, Category, Metadata } from './types';
-import { isConfigured, rpc, setIdToken } from './lib/bridge';
+import { isConfigured, rpc, setAccessToken, setIdToken } from './lib/bridge';
 import { optimiseImage } from './lib/image';
 
 const emptyBookmark = (categoryId = ''): Bookmark => ({ id: '', categoryId, title: '', description: '', tags: [], mainUrl: '', additionalUrls: ['', '', '', '', ''] });
 const trimTags = (value: string) => [...new Set(value.split(',').map(v => v.trim().toLowerCase()).filter(Boolean))];
 
 function App() {
-  const [token, setToken] = useState(''); const [googleReady, setGoogleReady] = useState(false); const [categories, setCategories] = useState<Category[]>([]); const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [token, setToken] = useState(''); const [accessToken, setAccessTokenState] = useState(''); const [googleReady, setGoogleReady] = useState(false); const [categories, setCategories] = useState<Category[]>([]); const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => localStorage.getItem('violet-theme') === 'dark' || (!localStorage.getItem('violet-theme') && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
   const [view, setView] = useState<'home'|'settings'>('home'); const [activeCategory, setActiveCategory] = useState('all'); const [query, setQuery] = useState(''); const [tag, setTag] = useState('');
-  const [editing, setEditing] = useState<Bookmark | null>(null); const [loading, setLoading] = useState(false); const [notice, setNotice] = useState(''); const signIn = useRef<HTMLDivElement>(null);
+  const [editing, setEditing] = useState<Bookmark | null>(null); const [loading, setLoading] = useState(false); const [notice, setNotice] = useState(''); const signIn = useRef<HTMLDivElement>(null); const tokenClient = useRef<{ requestAccessToken(config?: { prompt?: string }): void } | null>(null);
   const load = async () => { setLoading(true); try { const data = await rpc<{ categories: Category[]; bookmarks: Bookmark[] }>('bootstrap'); setCategories(data.categories); setBookmarks(data.bookmarks); } catch (e) { setNotice((e as Error).message); } finally { setLoading(false); } };
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-    if (!clientId || clientId.includes('your-')) { setNotice('Configure VITE_GOOGLE_CLIENT_ID and VITE_APPS_SCRIPT_URL to begin.'); return; }
+    if (!clientId || clientId.includes('your-')) { setNotice('Configure VITE_GOOGLE_CLIENT_ID and VITE_APPS_SCRIPT_ID to begin.'); return; }
     const script = document.createElement('script'); script.src = 'https://accounts.google.com/gsi/client'; script.async = true;
-    script.onload = () => { window.google?.accounts.id.initialize({ client_id: clientId, callback: (r: { credential: string }) => { setIdToken(r.credential); setToken(r.credential); } }); setGoogleReady(true); }; document.head.appendChild(script);
+    script.onload = () => {
+      tokenClient.current = window.google?.accounts.oauth2.initTokenClient({ client_id: clientId, scope: 'https://www.googleapis.com/auth/script.projects', callback: (r: { access_token?: string; error?: string }) => { if (r.error || !r.access_token) { setToken(''); setNotice(r.error || 'Google permission was not granted.'); return; } setAccessToken(r.access_token); setAccessTokenState(r.access_token); } }) || null;
+      window.google?.accounts.id.initialize({ client_id: clientId, callback: (r: { credential: string }) => { setIdToken(r.credential); setToken(r.credential); tokenClient.current?.requestAccessToken({ prompt: 'consent' }); } }); setGoogleReady(true);
+    }; document.head.appendChild(script);
     return () => script.remove();
   }, []);
-  useEffect(() => { if (token) load(); }, [token]);
+  useEffect(() => { if (token && accessToken) load(); }, [token, accessToken]);
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('violet-theme', theme); }, [theme]);
   useEffect(() => { if (!token && googleReady && signIn.current && window.google) window.google.accounts.id.renderButton(signIn.current, { theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill' }); }, [token, googleReady]);
   const filtered = useMemo(() => bookmarks.filter(b => (activeCategory === 'all' || b.categoryId === activeCategory) && (!tag || b.tags.includes(tag)) && `${b.title} ${b.description} ${b.tags.join(' ')}`.toLowerCase().includes(query.toLowerCase())), [bookmarks, activeCategory, query, tag]);
@@ -28,8 +31,8 @@ function App() {
   const save = async (bookmark: Bookmark) => { setLoading(true); try { const saved = await rpc<Bookmark>('saveBookmark', { bookmark }); setBookmarks(items => items.some(x => x.id === saved.id) ? items.map(x => x.id === saved.id ? saved : x) : [saved, ...items]); setEditing(null); setNotice('Bookmark saved.'); } catch (e) { setNotice((e as Error).message); } finally { setLoading(false); } };
   const remove = async (id: string) => { if (!confirm('Delete this bookmark?')) return; try { await rpc('deleteBookmark', { id }); setBookmarks(items => items.filter(x => x.id !== id)); } catch (e) { setNotice((e as Error).message); } };
   const toggleTheme = () => setTheme(current => current === 'dark' ? 'light' : 'dark');
-  if (!isConfigured()) return <main className="setup"><ThemeToggle theme={theme} onClick={toggleTheme}/><BookmarkIcon size={38}/><h1>Violet Bookmarks</h1><p>Add your Google client ID and Apps Script URL to <code>.env</code>, then restart Vite.</p></main>;
-  if (!token) return <main className="signin"><ThemeToggle theme={theme} onClick={toggleTheme}/><div className="brand"><BookmarkIcon/><span>Violet Bookmarks</span></div><h1>A calmer home for<br/>everything worth keeping.</h1><p>Sign in with your approved Google account to manage your private collection.</p><div ref={signIn}/>{notice && <small>{notice}</small>}</main>;
+  if (!isConfigured()) return <main className="setup"><ThemeToggle theme={theme} onClick={toggleTheme}/><BookmarkIcon size={38}/><h1>Violet Bookmarks</h1><p>Add your Google client ID and Apps Script project ID to <code>.env</code>, then restart Vite.</p></main>;
+  if (!token || !accessToken) return <main className="signin"><ThemeToggle theme={theme} onClick={toggleTheme}/><div className="brand"><BookmarkIcon/><span>Violet Bookmarks</span></div><h1>A calmer home for<br/>everything worth keeping.</h1><p>{token ? 'Requesting permission to manage your private collection…' : 'Sign in with your approved Google account to manage your private collection.'}</p>{!token && <div ref={signIn}/>} {notice && <small>{notice}</small>}</main>;
   return <div className="app">
     <aside><div className="brand"><BookmarkIcon/><span>Violet Bookmarks</span></div><button className={view === 'home' ? 'active' : ''} onClick={() => setView('home')}><Home/>Library</button><button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}><Settings/>Settings</button><div className="side-bottom"><ThemeToggle theme={theme} onClick={toggleTheme}/><button className="new" onClick={() => setEditing(emptyBookmark(categories[0]?.id))}><Plus/>New bookmark</button></div></aside>
     <main><header><div><p className="eyebrow">YOUR COLLECTION</p><h1>{view === 'settings' ? 'Settings' : 'Bookmarks'}</h1></div><div className="header-actions"><ThemeToggle theme={theme} onClick={toggleTheme}/><button className="new desktop-new" onClick={() => setEditing(emptyBookmark(categories[0]?.id))}><Plus/>Add bookmark</button></div></header>{notice && <div className="notice">{notice}<button onClick={() => setNotice('')}><X size={16}/></button></div>}
