@@ -8,7 +8,7 @@ Violet Bookmarks is a static React/Vite application hosted on GitHub Pages. Goog
 flowchart LR
   U[Owner] --> SPA[GitHub Pages<br/>React + Vite]
   SPA --> GIS[Google Identity Services]
-  GIS -->|ID token| SPA
+  GIS -->|OAuth access token| SPA
   SPA -->|OAuth access token| API[Apps Script Execution API]
   API --> GAS[Apps Script API executable]
   GAS --> Sheets[(Google Sheets)]
@@ -25,14 +25,14 @@ flowchart LR
 
 ## Apps Script service
 
-- `apps-script/Code.gs` validates Google ID tokens with Google tokeninfo, checks the allowed-email list, and dispatches operations. Its public `api` function is invoked through the Apps Script Execution API.
-- Supported operations: `bootstrap`, `listBookmarks`, `getBookmark`, `saveBookmark`, `deleteBookmark`, `moveBookmark`, `listCategories`, `saveCategory`, `deleteCategory`, `fetchMetadata`, and `uploadPhoto`.
+- `apps-script/Code.gs` validates Google access tokens with Google tokeninfo, checks the allowed-email list, migrates missing headers, and dispatches operations. Its public `api` function is invoked through the Apps Script Execution API.
+- Supported operations include the standard bookmark/category operations plus `trashBookmark`, `restoreBookmark`, `permanentlyDelete`, `toggleCuration`, `bulkUpdate`, `findDuplicates`, and `mergeBookmarks`.
 
 ## Storage model
 
 The first `bootstrap` creates the `Categories` sheet when needed. It holds `id`, `name`, `sheetName`, `sortOrder`, and `active` columns. Creating a category creates a matching bookmark sheet.
 
-Each category sheet uses a consistent header row: bookmark identity and category, title/description/tags, main URL and five additional URLs, favicon/Open Graph URLs, metadata JSON, optional Drive photo URL, timestamps, and owner email.
+Each category sheet uses a consistent header row: bookmark identity and category, title/description/tags, main URL and five additional URLs, favicon/Open Graph URLs, metadata JSON, optional Drive photo URL, timestamps, owner email, favorite flag, notes, archive time, and recoverable-delete fields. Missing columns are appended without moving existing data. A legacy pin column is retained only to preserve existing sheet layouts and is no longer used.
 
 Photos are saved in the Drive folder named by the `DRIVE_FOLDER_ID` Script Property. The generated file is shared as viewable-by-link so that the static site can render it.
 
@@ -40,10 +40,9 @@ Photos are saved in the Drive folder named by the `DRIVE_FOLDER_ID` Script Prope
 
 The frontend requires `VITE_GOOGLE_CLIENT_ID` and `VITE_APPS_SCRIPT_ID` in `.env`. `VITE_APPS_SCRIPT_ID` is the Script ID shown in Apps Script Project Settings, not a web-app deployment URL. Apps Script requires these Script Properties:
 
-- `SPREADSHEET_ID`
+- `SHEET_ID`
 - `DRIVE_FOLDER_ID`
-- `GOOGLE_CLIENT_ID`
+- `GOOGLE_OAUTH_CLIENT_ID`
 - `ALLOWED_EMAILS`
-- `APP_ORIGIN` (reserved for deployment policy)
 
 Associate the Apps Script project with the OAuth client’s Google Cloud project, enable the Google Apps Script API, and deploy it as an API Executable. Run `npm run build` to populate `docs/` for GitHub Pages.

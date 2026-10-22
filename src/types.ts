@@ -3,6 +3,8 @@ export type Bookmark = {
   id: string; categoryId: string; title: string; description: string; tags: string[]; mainUrl: string;
   additionalUrls: string[]; faviconUrl?: string; ogImageUrl?: string; metadata?: Record<string, string>;
   photoUrl?: string; createdAt?: string; updatedAt?: string; owner?: string;
+  favorite?: boolean; notes?: string; archivedAt?: string;
+  deletedAt?: string; deletedFromCategoryId?: string;
 };
 export type Metadata = Pick<Bookmark, 'title' | 'description' | 'faviconUrl' | 'ogImageUrl' | 'metadata'> & { warning?: string };
 export type BridgeResponse<T> = { ok: boolean; data?: T; error?: string };

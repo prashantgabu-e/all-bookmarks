@@ -3,16 +3,20 @@
 ## Secure access
 
 - Uses Google Identity Services for sign-in.
-- The Apps Script service validates the ID token, verifies its OAuth client ID, and restricts the application to the comma-separated email allowlist stored in Script Properties.
+- The Apps Script service validates the Google access token, verifies its OAuth client ID, and restricts the application to the comma-separated email allowlist stored in Script Properties.
 - Firebase is not used.
 
 ## Bookmark library
 
 - Browse the complete collection or a single category.
 - Search title, description, and tags; filter by tag.
-- Create, edit, delete, and move bookmarks across categories.
+- Create, edit, recoverably delete, restore, and move bookmarks across categories.
 - A bookmark contains a category, title, description, normalized tags, one main URL, and five optional additional URLs.
 - Every URL field has a copy control. Bookmark cards open the main URL in a new tab.
+- Additional URLs are collapsed for new bookmarks and automatically expanded while editing a populated bookmark.
+- Star bookmarks, keep private notes, and filter active, starred, or trash views.
+- Select multiple cards to move them, add/remove tags, restore from trash, or move them to trash. Permanent deletion is available only in trash.
+- Matching normalized main URLs are detected before saving. You can save separately or merge into a chosen existing bookmark; a merge combines tags, notes, and optional URLs and moves the duplicate to trash.
 
 ## Metadata and images
 
@@ -32,6 +36,7 @@
 - Mobile-first layout with a bottom navigation bar and responsive bookmark grid.
 - Violet-accented interface, animated cards and dialogs, loading states, and feedback notices.
 - Light and dark themes. The first visit follows the device preference; a user choice is stored locally as `violet-theme`.
+- Existing category sheets are migrated safely: missing library columns are appended without changing stored rows.
 
 ## Hosting
 
