@@ -1,8 +1,8 @@
-# Violet Bookmarks Architecture
+# All Bookmarks Architecture
 
 ## Overview
 
-Violet Bookmarks is a static React/Vite application hosted on GitHub Pages. Google Apps Script is its trusted service layer: it authorizes requests, manages the Google Spreadsheet, fetches website metadata, and stores optional photos in Google Drive.
+All Bookmarks is a static React/Vite application hosted on GitHub Pages. Google Apps Script is its trusted service layer: it authorizes requests, manages the Google Spreadsheet, fetches website metadata, and stores optional photos in Google Drive.
 
 ```mermaid
 flowchart LR

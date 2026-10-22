@@ -1,4 +1,4 @@
-# Violet Bookmarks
+# All Bookmarks
 
 A mobile-first bookmark manager hosted on GitHub Pages, using Google Sheets, Google Drive, Google Identity Services, and Google Apps Script. Firebase is not used.
 
